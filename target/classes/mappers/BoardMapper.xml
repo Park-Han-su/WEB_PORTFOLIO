@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mappers.BoardMapper">
+
+	<select id="selectBoardList" parameterType="board"
+		resultType="map">
+		select
+		a.*,
+		b.email,
+		b.name,
+		b.code
+
+		from board as a
+		inner join member as b
+		on
+		a.m_id = b.code
+		<trim prefix="where" prefixOverrides="and | or">
+			<if test=" seq != null">
+				a.seq = #{seq}
+			</if>
+			<if test="searchType =='title' and keyword != null and keyword != '' ">
+				and a.title like CONCAT('%', #{keyword}, '%')
+			</if>
+			<if test="searchType =='content' and keyword != null and keyword != '' ">
+				and a.content like CONCAT('%', #{keyword}, '%')
+			</if>
+			<if test="searchType =='writer' and keyword != null and keyword != '' ">
+				and a.writer like CONCAT('%', #{keyword}, '%')
+			</if>
+		</trim>
+		order by a.seq DESC
+		<trim>
+			<if test="pageIndex != null">
+				limit #{pageIndex}, #{perPageCount}
+			</if>
+		</trim>
+	</select>
+	
+	<select id="selectCount" resultType="int">
+	select count(*)
+	from board 
+	<trim prefix="where" prefixOverrides="and | or">
+		<if test="searchType =='title' and keyword != null and keyword != '' ">
+			and title like CONCAT('%', #{keyword}, '%')
+		</if>
+		<if test="searchType =='content' and keyword != null and keyword != '' ">
+			and content like CONCAT('%', #{keyword}, '%')
+		</if>
+		<if test="searchType =='writer' and keyword != null and keyword != '' ">
+			and writer like CONCAT('%', #{keyword}, '%')
+		</if>
+	</trim>
+	</select>
+
+	<insert id="insertBoard" parameterType="board">
+		insert into board (
+		title,
+		content,
+		writer,
+		m_id
+		<if test="file1Name != null">
+			,file1Name
+			,file1SName
+		</if>
+		)
+		values (
+		#{title},
+		#{content},
+		#{writer},
+		#{m_id}
+		<if test="file1Name != null">
+			,#{file1Name}
+			,#{file1SName}
+		</if>
+		)
+	</insert>
+
+	<update id="modifyBoard" parameterType="board">
+		update board
+		set
+		title = #{title},
+		content = #{content},
+		update_date = CURRENT_TIMESTAMP
+		<if test="file1Name != null">
+			,file1Name = #{file1Name},
+			file1SName = #{file1SName}
+		</if>
+		where seq = #{seq}
+	</update>
+
+	<delete id="deleteBoard" parameterType="board">
+		delete from board
+		where
+		seq = #{seq}
+	</delete>
+
+	<insert id="insertComment" parameterType="comment">
+		insert into comment(
+		comment,
+		b_seq,
+		m_id,
+		m_name
+		)
+		values(
+		#{comment},
+		#{b_seq},
+		#{m_id},
+		#{m_name}
+		)
+	</insert>
+
+	<select id="selectComment" parameterType="comment" 
+		resultType="comment">
+		select c.*
+		from comment as c 
+		inner join board as b
+		on c.b_seq = #{b_seq} = b.seq
+	</select>
+	
+	<update id="modifyComment" parameterType="comment">
+		update comment
+		set 
+		comment = #{comment}
+		,reg_date = now()
+		where seq = #{seq}
+	</update>
+	
+	<delete id="deleteComment" parameterType="comment">
+		delete 
+		from comment
+		where seq = #{seq}
+	</delete>
+
+</mapper>
+	
